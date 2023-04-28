@@ -1,18 +1,38 @@
-# Vue 3 + TypeScript + Vite
+# Teorema de Pick na Prática!
 
-This template should help get you started developing with Vue 3 and TypeScript in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+Revitalização de Software educacionais pelo Projeto Cálculo diferencial e integral - um kit de sobrevivência, da Universidade Estadual de Maringá (UEM), coordenado pelo professor Rodrigo Martins.
 
-## Recommended IDE Setup
+Neste site existe uma malha pontilhada destinada a gerar polígonos com seus vértices nos pontos.
+O objeto é calcular a área do polígono gerado, utilizando o Teorema de Pick.
 
-- [VS Code](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).
+Site hospedado em: [https://teorema-de-pick.web.app/](https://teorema-de-pick.web.app/)
 
-## Type Support For `.vue` Imports in TS
+## O que é o Teorema de Pick?
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin) to make the TypeScript language service aware of `.vue` types.
+[wikipedia](https://en.wikipedia.org/wiki/Pick%27s_theorem)
+[kit de sobrevivência](http://www.dma.uem.br/kit/formulla-de-pick/formula-de-pick.pdf)
 
-If the standalone TypeScript plugin doesn't feel fast enough to you, Volar has also implemented a [Take Over Mode](https://github.com/johnsoncodehk/volar/discussions/471#discussioncomment-1361669) that is more performant. You can enable it by the following steps:
+De forma prática, ele afirma que a área de um polígono desenhado em uma malha com pontos em coordenadas discretas
+está relacionada com a quantidade de pontos internos e pontos na borda do polígono da seguinte forma:
+$$A = i + \frac{b}{2} - 1$$
+onde $A$ é a área do polígono, $i$ é a quantidade de pontos internos e $b$ é a quantidade de pontos na borda do polígono.
 
-1. Disable the built-in TypeScript Extension
-   1. Run `Extensions: Show Built-in Extensions` from VSCode's command palette
-   2. Find `TypeScript and JavaScript Language Features`, right click and select `Disable (Workspace)`
-2. Reload the VSCode window by running `Developer: Reload Window` from the command palette.
+## O presente projeto
+
+Feito utilizando Vite + VueJS e hospedado no Firebase Hosting pelo aluno Ruan Gallio do curso de matemática da Universidade Estadual do Oeste do Paraná (UNIOESTE).
+
+## Como contribuir?
+
+Para contribuir com o projeto, basta fazer um fork do repositório, fazer as alterações desejadas e enviar um pull request que será analisado e, se aprovado, incorporado ao projeto.
+
+## Como rodar o projeto localmente?
+
+Para rodar o projeto localmente, basta clonar o repositório, instalar as dependências e rodar o servidor de desenvolvimento com
+
+```bash
+npx vite --port=4000
+```
+
+## Licença
+
+GNU GPLv3

@@ -64,7 +64,6 @@ const drawPointsInsidePolygon = (polygon: Point[]) => {
     ) {
       continue;
     }
-    console.log("===  PicksGrid.vue [68] ===");
     if (pointIsInsidePolygon(point, polygon)) {
       numberOfPointsInsidePolygon++;
       if (ctx.value) {
@@ -127,8 +126,6 @@ const handleClick = (event: MouseEvent) => {
     // Calculate the nearest grid point to the mouse click by rounding down the mouse coordinates to the nearest grid multiple
     const x = Math.round(mouseX / gridSize) * gridSize;
     const y = Math.round(mouseY / gridSize) * gridSize;
-    // console.log("=== x PicksGrid.vue [78] ===", x);
-    // console.log("=== y PicksGrid.vue [79] ===", y);
     const point: Point = [x, y];
 
     // Get the canvas context
@@ -149,14 +146,12 @@ const handleClick = (event: MouseEvent) => {
     const pointIndex = polygon.findIndex(
       (point) => point[0] === x && point[1] === y
     );
-    console.log("=== pointsIndex PicksGrid.vue [86] ===", pointIndex);
     const areAllPointsConsecutive = polygon.length
       ? polygon.every((point) => point[0] === x && point[1] === y)
       : false;
     if (pointIndex === 0 && polygon.length >= 3 && !areAllPointsConsecutive) {
       drawPolygon();
     } else {
-      console.log("===  PicksGrid.vue [97] ===");
       polygon.push(point);
     }
   }
@@ -172,7 +167,7 @@ const clearGrid = () => {
     gridPoints = [];
     pointsOnPolygon.value = 0;
     pointsInsidePolygon.value = 0;
-    drawGridPoints(numberOfGridPoints.value);
+    drawGridPoints(numberOfGridPoints.value + 1);
   }
 };
 
