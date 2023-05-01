@@ -4,10 +4,10 @@ import { pointOnPolygon, pointInPolygon } from "geometric";
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
-const canvasWidth = 400;
-const canvasHeight = 400;
+let canvasWidth = 400;
+let canvasHeight = 400;
 
-const numberOfGridPoints = ref(0);
+const numberOfGridPoints = ref(2);
 const pointsInsidePolygon = ref(0);
 const pointsOnPolygon = ref(0);
 type Point = [number, number];
@@ -17,11 +17,12 @@ let gridPoints: Point[] = [];
 onMounted(() => {
   canvasRef.value = document.getElementById("canvas") as HTMLCanvasElement;
   ctx.value = canvasRef.value.getContext("2d");
+  drawGridPoints(numberOfGridPoints.value);
 });
 
 watch(numberOfGridPoints, (newValue) => {
   // Draw the grid points
-  drawGridPoints(newValue + 1);
+  drawGridPoints(newValue);
 });
 
 const drawPolygon = () => {
@@ -128,6 +129,10 @@ const handleClick = (event: MouseEvent) => {
     const y = Math.round(mouseY / gridSize) * gridSize;
     const point: Point = [x, y];
 
+    if (x === 0 || y === 0 || x === canvas.width || y === canvas.height) {
+      return;
+    }
+
     // Get the canvas context
     const context = canvas.getContext("2d");
 
@@ -146,13 +151,21 @@ const handleClick = (event: MouseEvent) => {
     const pointIndex = polygon.findIndex(
       (point) => point[0] === x && point[1] === y
     );
+
+    const pointIsFirstPoint = pointIndex === 0;
+
     const areAllPointsConsecutive = polygon.length
       ? polygon.every((point) => point[0] === x && point[1] === y)
       : false;
-    if (pointIndex === 0 && polygon.length >= 3 && !areAllPointsConsecutive) {
-      drawPolygon();
-    } else {
+
+    if (pointIndex === -1) {
       polygon.push(point);
+      return;
+    }
+
+    if (pointIsFirstPoint && polygon.length >= 3 && !areAllPointsConsecutive) {
+      drawPolygon();
+      return;
     }
   }
 };
@@ -167,7 +180,7 @@ const clearGrid = () => {
     gridPoints = [];
     pointsOnPolygon.value = 0;
     pointsInsidePolygon.value = 0;
-    drawGridPoints(numberOfGridPoints.value + 1);
+    drawGridPoints(numberOfGridPoints.value);
   }
 };
 
@@ -178,8 +191,8 @@ const drawGridPoints = (numberOfPoints: number) => {
     const gridSize = 50;
     const pointRadius = 3;
     context.fillStyle = "#000";
-    const canvasWidth = numberOfPoints * gridSize;
-    const canvasHeight = numberOfPoints * gridSize;
+    const canvasWidth = (numberOfPoints + 1) * gridSize;
+    const canvasHeight = (numberOfPoints + 1) * gridSize;
     canvas.width = canvasWidth;
     canvas.height = canvasHeight;
 
@@ -203,12 +216,13 @@ const drawGridPoints = (numberOfPoints: number) => {
       class="flex top-2 text-black flex-row items-center justify-center h-16 w-full gap-3"
     >
       <h1>Qual o tamanho do seu plano?</h1>
-      <!-- Set Input that changes numberOfGridPoints and set max number of grid points to 20 -->
       <input
         type="number"
         class="h-10 w-10 text-center text-black bg-white border-2 border-black"
         v-model.number="numberOfGridPoints"
-        @change="numberOfGridPoints = Math.min(numberOfGridPoints, 15)"
+        @change="
+          numberOfGridPoints = Math.min(Math.max(numberOfGridPoints, 2), 15)
+        "
       />
       <button class="btn btn-primary" @click="clearGrid">Limpar</button>
     </div>
