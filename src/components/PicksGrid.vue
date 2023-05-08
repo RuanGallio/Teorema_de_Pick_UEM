@@ -210,7 +210,7 @@ const drawGridPoints = (numberOfPoints: number) => {
 </script>
 <template>
   <div
-    class="relative bg-white flex flex-col items-center justify-center h-full w-full max-h-full max-w-full"
+    class="relative py-[3%] bg-white flex flex-col items-center justify-center h-full w-full max-h-full max-w-full"
   >
     <div
       class="flex top-2 text-black flex-row items-center justify-center h-16 w-full gap-3"
