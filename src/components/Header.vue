@@ -2,8 +2,9 @@
 
 <template>
   <div
-    class="text-center relative w-full min-h-12 bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500"
+    class="text-center relative w-full py-6 text-lg bg-neutral text-neutral-content justify-center items-center flex flex-col gap-3"
   >
-    Teorema de Pick
+    <h> UEM - Kit Cálculo: O Teorema de Pick </h>
+    <h1>Ainda em desenvolvimento...</h1>
   </div>
 </template>
