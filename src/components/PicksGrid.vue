@@ -5,8 +5,10 @@ import { pointOnPolygon, pointInPolygon } from "geometric";
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
 const pickFormula = ref(`
-  <math xmlns="http://www.w3.org/1998/Math/MathML" >
-    <mrow>
+  <math xmlns="http://www.w3.org/1998/Math/MathML"  >
+    <mrow
+      class="text-[20px] text-center "
+    >
       <mi>A</mi><mo>=</mo>
       <mi>i</mi><mo>+</mo>
       <mfrac>
@@ -228,7 +230,7 @@ const drawGridPoints = (numberOfPoints: number) => {
     class="relative py-[3%] bg-white flex flex-col items-center justify-center h-full w-full max-h-full max-w-full"
   >
     <div
-      class="flex top-2 text-black flex-row items-center justify-center h-16 w-full gap-3"
+      class="flex my-[2%] text-black flex-row items-center justify-center h-16 w-full gap-3"
     >
       <h1>Qual o tamanho do seu plano?</h1>
       <input
@@ -241,6 +243,19 @@ const drawGridPoints = (numberOfPoints: number) => {
       />
       <button class="btn btn-primary" @click="clearGrid">Limpar</button>
     </div>
+
+    <div class="flex flex-col items-center justify-center w-full">
+      <div class="flex gap-2 items-center justify-center max-w-2xl">
+        <p class="text-black">
+          <b class="text-lg italic">Teorema de Pick: </b> Seja P um polígono
+          simples. Se <b class="italic">b</b> é o número de pontos de fronteira
+          e <b class="italic">i</b> o número de pontos interiores, então a área
+          de P é dada por
+          <b class="mathml-formula text-black" v-html="pickFormula"></b>.
+        </p>
+      </div>
+    </div>
+
     <div
       class="flex relative flex-row gap-10 justify-between items-center h-full max-h-full max-w-full"
     >
@@ -251,36 +266,19 @@ const drawGridPoints = (numberOfPoints: number) => {
         :height="canvasHeight"
         @click="handleClick"
       />
-      <div v-show="polygon.length" class="flex flex-col">
-        <div class="flex flex-row items-center h-16 w-full gap-4">
-          <h1 class="text-black">Teorema de Pick:</h1>
-          <div class="mathml-formula text-black" v-html="pickFormula"></div>
-        </div>
-        <p
-          class="text-black mb-4"
-        >
-          Onde:
-          <ul>
-            <li>
-              <b>i</b> é a quantidade de pontos no interior do
-              polígono
-            </li>
-            <li>
-              <b>b</b> é a quantidade de pontos na borda (vértices inclusos) do polígono
-            </li>
-
-          </ul>
-        </p>
+      <div v-show="polygon.length" class="flex flex-col gap-4">
         <h1 class="text-black">
-          Quantidade de pontos dentro do polígono: <b>{{ pointsInsidePolygon }}</b>
+          Quantidade de pontos dentro do polígono:
+          <b>{{ pointsInsidePolygon }}</b>
         </h1>
         <h1 class="text-black">
-          Quantidade de pontos na borda do polígono: <b> {{ pointsOnPolygon }}</b>
+          Quantidade de pontos na borda do polígono:
+          <b> {{ pointsOnPolygon }}</b>
         </h1>
-        <h1 class="text-black mt-3">
+        <h1 class="text-black">
           Área do polígono por Pick:
-         <b> {{ polygonAreaPick(pointsInsidePolygon, pointsOnPolygon) }}</b> unidades
-          de área
+          <b> {{ polygonAreaPick(pointsInsidePolygon, pointsOnPolygon) }}</b>
+          unidades de área
         </h1>
       </div>
     </div>
