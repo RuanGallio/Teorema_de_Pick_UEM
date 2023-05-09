@@ -4,6 +4,19 @@ import { pointOnPolygon, pointInPolygon } from "geometric";
 
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const ctx = ref<CanvasRenderingContext2D | null>(null);
+const pickFormula = ref(`
+  <math xmlns="http://www.w3.org/1998/Math/MathML" >
+    <mrow>
+      <mi>A</mi><mo>=</mo>
+      <mi>i</mi><mo>+</mo>
+      <mfrac>
+      <mn>1</mn><mn>2</mn>
+      </mfrac><mi>b</mi> <mo> - </mo>
+      <mn>1</mn>
+    </mrow>
+  </math>
+`);
+
 let canvasWidth = 400;
 let canvasHeight = 400;
 
@@ -22,6 +35,8 @@ onMounted(() => {
 
 watch(numberOfGridPoints, (newValue) => {
   // Draw the grid points
+
+  clearGrid();
   drawGridPoints(newValue);
 });
 
@@ -138,7 +153,7 @@ const handleClick = (event: MouseEvent) => {
 
     if (context) {
       // Set the fill color to green
-      context.fillStyle = "#0f0";
+      context.fillStyle = "#f00";
 
       // Draw a larger circle at the center of the grid point using twice the point radius
       context.beginPath();
@@ -237,15 +252,34 @@ const drawGridPoints = (numberOfPoints: number) => {
         @click="handleClick"
       />
       <div v-show="polygon.length" class="flex flex-col">
+        <div class="flex flex-row items-center h-16 w-full gap-4">
+          <h1 class="text-black">Teorema de Pick:</h1>
+          <div class="mathml-formula text-black" v-html="pickFormula"></div>
+        </div>
+        <p
+          class="text-black mb-4"
+        >
+          Onde:
+          <ul>
+            <li>
+              <b>i</b> é a quantidade de pontos no interior do
+              polígono
+            </li>
+            <li>
+              <b>b</b> é a quantidade de pontos na borda (vértices inclusos) do polígono
+            </li>
+
+          </ul>
+        </p>
         <h1 class="text-black">
-          Quantidade de pontos dentro do polígono: {{ pointsInsidePolygon }}
+          Quantidade de pontos dentro do polígono: <b>{{ pointsInsidePolygon }}</b>
         </h1>
         <h1 class="text-black">
-          Quantidade de pontos na borda do polígono: {{ pointsOnPolygon }}
+          Quantidade de pontos na borda do polígono: <b> {{ pointsOnPolygon }}</b>
         </h1>
-        <h1 class="text-black">
+        <h1 class="text-black mt-3">
           Área do polígono por Pick:
-          {{ polygonAreaPick(pointsInsidePolygon, pointsOnPolygon) }} unidades
+         <b> {{ polygonAreaPick(pointsInsidePolygon, pointsOnPolygon) }}</b> unidades
           de área
         </h1>
       </div>
