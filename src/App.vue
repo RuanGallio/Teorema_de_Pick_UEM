@@ -6,7 +6,7 @@ import Header from "./components/Header.vue";
 </script>
 
 <template>
-  <div id="app" class="relative flex flex-col h-screen bg-white">
+  <div id="app" class="relative flex flex-col min-h-screen bg-white">
     <Header />
     <PicksGrid />
     <Footer />

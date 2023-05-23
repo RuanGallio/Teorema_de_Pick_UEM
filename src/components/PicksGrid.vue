@@ -1,249 +1,285 @@
-<script setup lang="ts">
-import { onMounted, ref, watch } from "vue";
-import { pointOnPolygon, pointInPolygon } from "geometric";
+<script lang="ts">
+import { defineComponent } from "vue";
+import { pointInPolygon, pointOnPolygon, lineIntersectsLine } from "geometric";
 
-const canvasRef = ref<HTMLCanvasElement | null>(null);
-const ctx = ref<CanvasRenderingContext2D | null>(null);
-const pickFormula = ref(`
-  <math xmlns="http://www.w3.org/1998/Math/MathML"  >
-    <mrow
-      class="text-[20px] text-center "
-    >
-      <mi>A</mi><mo>=</mo>
-      <mi>i</mi><mo>+</mo>
-      <mfrac>
-      <mn>1</mn><mn>2</mn>
-      </mfrac><mi>b</mi> <mo> - </mo>
-      <mn>1</mn>
-    </mrow>
-  </math>
-`);
+const formulaHtml = `
+<math xmlns="http://www.w3.org/1998/Math/MathML"  >
+  <mrow
+    class="text-[20px] text-center "
+  >
+    <mi>A</mi><mo>=</mo>
+    <mi>i</mi><mo>+</mo>
+    <mfrac>
+    <mn>1</mn><mn>2</mn>
+    </mfrac><mi>b</mi> <mo> - </mo>
+    <mn>1</mn>
+  </mrow>
+</math>
+`;
 
-let canvasWidth = 400;
-let canvasHeight = 400;
-
-const numberOfGridPoints = ref(2);
-const pointsInsidePolygon = ref(0);
-const pointsOnPolygon = ref(0);
 type Point = [number, number];
-let polygon: Point[] = [];
-let gridPoints: Point[] = [];
+type Polygon = Point[];
+type Line = [Point, Point];
 
-onMounted(() => {
-  canvasRef.value = document.getElementById("canvas") as HTMLCanvasElement;
-  ctx.value = canvasRef.value.getContext("2d");
-  drawGridPoints(numberOfGridPoints.value);
-});
+export default defineComponent({
+  name: "PickGrid",
+  setup() {
+    return {};
+  },
+  data() {
+    return {
+      pickFormula: formulaHtml,
+      canvas: null as HTMLCanvasElement | null,
+      image: null as HTMLImageElement | null,
+      ctx: null as CanvasRenderingContext2D | null,
+      polygon: [] as Polygon,
+      numPointsOnPolygon: 0,
+      numPointsInPolygon: 0,
+      grid: [] as Polygon,
+      gridNumPointsX: 10,
+      gridNumPointsY: 10,
+      gapBetweenPoints: 50,
+    };
+  },
+  mounted() {
+    const canvas = document.getElementById("canvas") as HTMLCanvasElement;
+    const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-watch(numberOfGridPoints, (newValue) => {
-  // Draw the grid points
+    this.canvas = canvas;
+    this.ctx = ctx;
+    this.drawGrid();
+  },
+  computed: {
+    canvasWidth() {
+      return this.gapBetweenPoints * (this.gridNumPointsX + 1);
+    },
+    canvasHeight() {
+      return this.gapBetweenPoints * (this.gridNumPointsY + 1);
+    },
+  },
 
-  clearGrid();
-  drawGridPoints(newValue);
-});
+  methods: {
+    fillPoint(fillStyle: string, point: Point, pointRadius: number) {
+      const { ctx } = this;
+      if (!ctx) return;
 
-const drawPolygon = () => {
-  if (ctx.value) {
-    const context = ctx.value;
-    context.strokeStyle = "#000";
-    context.lineWidth = 2;
-    context.beginPath();
-    context.moveTo(polygon[0][0], polygon[0][1]);
-    for (let i = 1; i < polygon.length; i++) {
-      context.lineTo(polygon[i][0], polygon[i][1]);
-    }
-    context.closePath();
-    context.stroke();
-  }
-  drawPointsInsidePolygon(polygon);
-};
+      const x = point[0];
+      const y = point[1];
 
-const drawPointsInsidePolygon = (polygon: Point[]) => {
-  const pointsNotSelected = gridPoints.filter(
-    (point) =>
-      polygon.findIndex((p) => p[0] === point[0] && p[1] === point[1]) === -1
-  );
+      ctx.fillStyle = fillStyle;
+      ctx.beginPath();
+      ctx.arc(x, y, pointRadius, 0, 2 * Math.PI);
+      ctx.fill();
+      ctx.closePath();
+    },
 
-  let numberOfPointsInsidePolygon = 0;
-  let numberOfPointsOnPolygon = 0;
-
-  const max_x = Math.max(...polygon.map((p) => p[0]));
-  const min_x = Math.min(...polygon.map((p) => p[0]));
-  const max_y = Math.max(...polygon.map((p) => p[1]));
-  const min_y = Math.min(...polygon.map((p) => p[1]));
-
-  // for loop for each point in pointsNotSelected
-
-  for (let i = 0; i < pointsNotSelected.length; i++) {
-    const point = pointsNotSelected[i];
-    if (
-      !(min_x <= point[0] && point[0] <= max_x) ||
-      !(min_y <= point[1] && point[1] <= max_y)
-    ) {
-      continue;
-    }
-    if (pointIsInsidePolygon(point, polygon)) {
-      numberOfPointsInsidePolygon++;
-      if (ctx.value) {
-        const context = ctx.value;
-        context.fillStyle = "#0f0";
-        context.beginPath();
-        context.arc(point[0], point[1], 3, 0, 2 * Math.PI);
-        context.fill();
+    lineWillIntersect(line: Line, polygon: Polygon) {
+      for (let i = 0; i < polygon.length - 1; i++) {
+        const line2 = [polygon[i], polygon[i + 1]] as Line;
+        if (lineIntersectsLine(line, line2)) {
+          return true;
+        }
       }
-    }
-    if (poinIsOnPolygon(point, polygon)) {
-      numberOfPointsOnPolygon++;
-      if (ctx.value) {
-        const context = ctx.value;
-        context.fillStyle = "#f00";
-        context.beginPath();
-        context.arc(point[0], point[1], 3, 0, 2 * Math.PI);
-        context.fill();
+
+      return false;
+    },
+
+    handleClick(event: MouseEvent) {
+      const { canvas, ctx, polygon, gapBetweenPoints } = this;
+
+      if (!canvas || !ctx) return;
+
+      const rect = canvas.getBoundingClientRect();
+
+      const mouseX = event.clientX - rect.left;
+      const mouseY = event.clientY - rect.top;
+
+      const x = Math.round(mouseX / gapBetweenPoints) * gapBetweenPoints;
+      const y = Math.round(mouseY / gapBetweenPoints) * gapBetweenPoints;
+
+      if (
+        x === 0 ||
+        y === 0 ||
+        x === this.canvasWidth ||
+        y === this.canvasHeight
+      )
+        return;
+
+      const point = [x, y] as Point;
+      const pointRadius = 5;
+
+      const pointIndex = polygon.findIndex(
+        (p) => p[0] === point[0] && p[1] === point[1]
+      );
+
+      const line = [polygon[polygon.length - 1], point] as Line;
+
+      const lineIntersect = this.lineWillIntersect(line, polygon.slice(0, -1));
+
+      const pointIsFirst = pointIndex === 0;
+
+      if (lineIntersect && !pointIsFirst) {
+        return;
       }
-    }
-  }
-  pointsOnPolygon.value = numberOfPointsOnPolygon + polygon.length;
-  pointsInsidePolygon.value = numberOfPointsInsidePolygon;
-};
 
-const poinIsOnPolygon = (point: Point, polygon: Point[]): boolean => {
-  return pointOnPolygon(point, polygon);
-};
+      const allPointsConsecutive = polygon.every(
+        (p) => p[0] === x && p[1] === y
+      );
 
-const pointIsInsidePolygon = (point: Point, polygon: Point[]): boolean => {
-  return pointInPolygon(point, polygon) && !pointOnPolygon(point, polygon);
-};
+      if (pointIndex === -1) {
+        this.fillPoint("red", point, pointRadius);
+        polygon.push(point);
+        return;
+      }
 
-const polygonAreaPick = (
-  pointsInPolygon: number,
-  pointsOnPolygon: number
-): number => {
-  return pointsInPolygon + pointsOnPolygon / 2 - 1;
-};
+      if (pointIsFirst && polygon.length >= 3 && !allPointsConsecutive) {
+        this.drawPolygon(polygon);
+        return;
+      }
+    },
 
-const handleClick = (event: MouseEvent) => {
-  // Get a reference to the canvas element
-  if (numberOfGridPoints.value <= 0) {
-    return;
-  }
+    handleFileInput(event: Event) {
+      /* 
+        TODO!
+        Por algum motivo, só desenha a imagem na segunda vez que o arquivo é selecionado.
+        Se atualizo as dimensoões do canvas manualmente com
+        ```
+        canvas.setAttribute("width", valor);
+        canvas.setAttribute("height", valor);
+        ```
+        a imagem é desenhada corretamente, mas o grid não é desenhado (a não ser com gambiarra)
 
-  if (canvasRef.value) {
-    const canvas = canvasRef.value;
+        Por que isso está acontecendo?
+      */
+      for (let i = 0; i < 2; i++) {
+        this.clearGrid();
+        const file = (event.target as HTMLInputElement).files?.[0];
 
-    // Get the position of the canvas relative to the viewport
-    const rect = canvas.getBoundingClientRect();
+        if (!file) return;
 
-    // Calculate the mouse coordinates relative to the canvas by subtracting the canvas position
-    const mouseX = event.clientX - rect.left;
-    const mouseY = event.clientY - rect.top;
+        const { ctx, canvas, gapBetweenPoints } = this;
 
-    // Calculate the size of the grid squares
-    const gridSize = 50;
+        if (!ctx || !canvas) return;
 
-    // Calculate the nearest grid point to the mouse click by rounding down the mouse coordinates to the nearest grid multiple
-    const x = Math.round(mouseX / gridSize) * gridSize;
-    const y = Math.round(mouseY / gridSize) * gridSize;
-    const point: Point = [x, y];
+        const reader = new FileReader();
 
-    if (x === 0 || y === 0 || x === canvas.width || y === canvas.height) {
-      return;
-    }
+        reader.onload = () => {
+          this.image = new Image();
+          let img = this.image as HTMLImageElement;
 
-    // Get the canvas context
-    const context = canvas.getContext("2d");
+          img.onload = () => {
+            this.gridNumPointsX = Math.round(img.width / gapBetweenPoints);
+            this.gridNumPointsY = Math.round(img.height / gapBetweenPoints);
+            ctx.drawImage(img, 0, 0);
+            this.drawGrid();
+          };
+          this.image.src = reader.result as string;
+        };
+        reader.readAsDataURL(file);
+      }
+    },
 
-    if (context) {
-      // Set the fill color to green
-      context.fillStyle = "#f00";
+    clearGrid() {
+      const { ctx, canvas } = this;
+      if (!ctx || !canvas) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw a larger circle at the center of the grid point using twice the point radius
-      context.beginPath();
+      this.grid = [];
+      this.polygon = [];
+      this.numPointsOnPolygon = 0;
+      this.numPointsInPolygon = 0;
+      this.drawGrid();
+    },
+    drawGrid() {
+      const { ctx, canvas, gapBetweenPoints, grid } = this;
+      if (!ctx || !canvas) return;
+
       const pointRadius = 3;
-      context.arc(x, y, 2 * pointRadius, 0, 2 * Math.PI);
-      context.fill();
-    }
 
-    //  check if point is in points
-    const pointIndex = polygon.findIndex(
-      (point) => point[0] === x && point[1] === y
-    );
+      for (
+        let x = gapBetweenPoints;
+        x < this.canvasWidth;
+        x += gapBetweenPoints
+      ) {
+        for (
+          let y = gapBetweenPoints;
+          y < this.canvasHeight;
+          y += gapBetweenPoints
+        ) {
+          grid.push([x, y]);
 
-    const pointIsFirstPoint = pointIndex === 0;
-
-    const areAllPointsConsecutive = polygon.length
-      ? polygon.every((point) => point[0] === x && point[1] === y)
-      : false;
-
-    if (pointIndex === -1) {
-      polygon.push(point);
-      return;
-    }
-
-    if (pointIsFirstPoint && polygon.length >= 3 && !areAllPointsConsecutive) {
-      drawPolygon();
-      return;
-    }
-  }
-};
-
-const clearGrid = () => {
-  // Clear the canvas
-  if (ctx.value && canvasRef.value) {
-    const context = ctx.value;
-    const canvas = canvasRef.value;
-    context.clearRect(0, 0, canvas.width, canvas.height);
-    polygon = [];
-    gridPoints = [];
-    pointsOnPolygon.value = 0;
-    pointsInsidePolygon.value = 0;
-    drawGridPoints(numberOfGridPoints.value);
-  }
-};
-
-const drawGridPoints = (numberOfPoints: number) => {
-  if (ctx.value && canvasRef.value) {
-    const context = ctx.value;
-    const canvas = canvasRef.value;
-    const gridSize = 50;
-    const pointRadius = 3;
-    context.fillStyle = "#000";
-    const canvasWidth = (numberOfPoints + 1) * gridSize;
-    const canvasHeight = (numberOfPoints + 1) * gridSize;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-
-    for (let x = gridSize; x < canvasWidth; x += gridSize) {
-      for (let y = gridSize; y < canvasHeight; y += gridSize) {
-        gridPoints.push([x, y]);
-
-        context.beginPath();
-        context.arc(x, y, pointRadius, 0, 2 * Math.PI);
-        context.fill();
+          this.fillPoint("#000", [x, y] as Point, pointRadius);
+        }
       }
-    }
-  }
-};
+    },
+
+    drawPolygon(polygon: Polygon) {
+      const { ctx } = this;
+      if (!ctx) return;
+      ctx.strokeStyle = "#000";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(polygon[0][0], polygon[0][1]);
+      for (let i = 1; i < polygon.length; i++) {
+        ctx.lineTo(polygon[i][0], polygon[i][1]);
+      }
+      ctx.closePath();
+      ctx.stroke();
+      this.drawPointsInPolygon(polygon);
+    },
+
+    pointStrictlyInPolygon(point: Point, polygon: Polygon) {
+      return pointInPolygon(point, polygon) && !pointOnPolygon(point, polygon);
+    },
+
+    drawPointsInPolygon(polygon: Polygon) {
+      const { ctx, grid } = this;
+      if (!ctx) return;
+
+      const pointsNotSelected = grid.filter(
+        (point) => !polygon.includes(point)
+      );
+
+      const max_x = Math.max(...polygon.map((p) => p[0]));
+      const min_x = Math.min(...polygon.map((p) => p[0]));
+      const max_y = Math.max(...polygon.map((p) => p[1]));
+      const min_y = Math.min(...polygon.map((p) => p[1]));
+
+      // for loop for each point in pointsNotSelected
+
+      for (let i = 0; i < pointsNotSelected.length; i++) {
+        const point = pointsNotSelected[i];
+        const x = point[0];
+        const y = point[1];
+
+        if (!(min_x <= x && x <= max_x) || !(min_y <= y && y <= max_y)) {
+          continue;
+        }
+
+        const pointIsInPolygon = this.pointStrictlyInPolygon(point, polygon);
+        const pointIsOnPolygon = pointOnPolygon(point, polygon);
+
+        if (pointIsInPolygon) {
+          this.numPointsInPolygon++;
+          this.fillPoint("#0f0", point, 4);
+        }
+        if (pointIsOnPolygon) {
+          this.numPointsOnPolygon++;
+          this.fillPoint("#f00", point, 4);
+        }
+      }
+    },
+
+    polygonAreaPick(numPointsInPolygon: number, numPointsOnPolygon: number) {
+      return numPointsInPolygon + 0.5 * numPointsOnPolygon - 1;
+    },
+  },
+});
 </script>
 <template>
   <div
-    class="relative py-[3%] bg-white flex flex-col items-center justify-center h-full w-full max-h-full max-w-full"
+    class="bg-white flex flex-col items-center justify-center w-full min-h-full"
   >
-    <div
-      class="flex my-[2%] text-black flex-row items-center justify-center h-16 w-full gap-3"
-    >
-      <h1>Qual o tamanho do seu plano?</h1>
-      <input
-        type="number"
-        class="h-10 w-10 text-center text-black bg-white border-2 border-black"
-        v-model.number="numberOfGridPoints"
-        @change="
-          numberOfGridPoints = Math.min(Math.max(numberOfGridPoints, 2), 15)
-        "
-      />
-      <button class="btn btn-primary" @click="clearGrid">Limpar</button>
-    </div>
-
     <div class="flex flex-col items-center justify-center w-full">
       <div class="flex gap-2 items-center justify-center max-w-2xl">
         <p class="text-black">
@@ -257,37 +293,77 @@ const drawGridPoints = (numberOfPoints: number) => {
     </div>
 
     <div
-      class="flex relative flex-row gap-10 justify-between items-center h-full max-h-full max-w-full"
+      class="grid grid-cols-2 gap-4 items-center justify-between w-full max-w-7xl"
     >
-      <canvas
-        id="canvas"
-        class="flex relative max-h-full max-w-full"
-        :width="canvasWidth"
-        :height="canvasHeight"
-        @click="handleClick"
-      />
-      <div v-show="polygon.length" class="flex flex-col gap-4">
+      <div class="flex flex-col items-start">
+        <div
+          class="flex my-[2%] text-black flex-row items-center justify-center h-16 gap-3"
+        >
+          <h1>Qual o tamanho do seu plano?</h1>
+          <div>
+            <input
+              type="number"
+              class="h-10 w-10 text-center text-black bg-white border-2 border-black"
+              v-model.number="gridNumPointsX"
+              @change="drawGrid"
+            />
+            x
+            <input
+              type="number"
+              class="h-10 w-10 text-center text-black bg-white border-2 border-black"
+              v-model.number="gridNumPointsY"
+              @change="drawGrid"
+            />
+            <button class="btn btn-primary ml-8" @click="drawGrid">
+              Desenhar
+            </button>
+          </div>
+        </div>
+        <div class="flex flex-row gap-6">
+          <h1
+            class="text-black text-lg flex flex-row justify-center h-16 gap-3"
+          >
+            Selecionar imagem de fundo:
+          </h1>
+          <input type="file" class="max-w-[20%]" @change="handleFileInput" />
+        </div>
+        <button class="btn btn-primary" @click="clearGrid">Limpar</button>
+      </div>
+      <div
+        v-show="polygon.length && numPointsOnPolygon"
+        class="flex flex-col items-end gap-4"
+      >
         <h1 class="text-black">
           Quantidade de pontos dentro do polígono:
-          <b>{{ pointsInsidePolygon }}</b>
+          <b>{{ numPointsInPolygon }}</b>
         </h1>
         <h1 class="text-black">
           Quantidade de pontos na borda do polígono:
-          <b> {{ pointsOnPolygon }}</b>
+          <b> {{ numPointsOnPolygon }}</b>
         </h1>
         <h1 class="text-black">
           Área do polígono por Pick:
-          <b> {{ polygonAreaPick(pointsInsidePolygon, pointsOnPolygon) }}</b>
+          <b> {{ polygonAreaPick(numPointsInPolygon, numPointsOnPolygon) }}</b>
           unidades de área
         </h1>
       </div>
     </div>
+    <div
+      class="flex relative flex-row gap-10 justify-between items-center h-full overflow-scroll"
+    >
+      <div class="flex items-center justify-center py-4">
+        <canvas
+          id="canvas"
+          class="max-w-full object-contain"
+          :width="canvasWidth"
+          :height="canvasHeight"
+          @click="handleClick"
+        />
+      </div>
+    </div>
   </div>
 </template>
-
 <style scoped>
-/* Removing arrows from input type=number */
-/* Chrome, Safari, Edge, Opera */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
