@@ -74,14 +74,16 @@ export default defineComponent({
     },
 
     lineWillIntersect(line: Line, polygon: Polygon) {
+      let numIntersections = 0;
       for (let i = 0; i < polygon.length - 1; i++) {
         const line2 = [polygon[i], polygon[i + 1]] as Line;
         if (lineIntersectsLine(line, line2)) {
-          return true;
+          numIntersections++;
+          if (numIntersections > 1) return numIntersections;
         }
       }
 
-      return false;
+      return numIntersections;
     },
 
     handleClick(event: MouseEvent) {
@@ -116,11 +118,12 @@ export default defineComponent({
 
       const lineIntersect = this.lineWillIntersect(line, polygon.slice(0, -1));
 
+      if (lineIntersect > 1) return;
+
       const pointIsFirst = pointIndex === 0;
 
-      if (lineIntersect && !pointIsFirst) {
-        return;
-      }
+      console.log("=== lineIntersect PicksGrid.vue [124] ===", lineIntersect);
+      if (lineIntersect && !pointIsFirst) return;
 
       const allPointsConsecutive = polygon.every(
         (p) => p[0] === x && p[1] === y
