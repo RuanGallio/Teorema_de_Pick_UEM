@@ -122,7 +122,6 @@ export default defineComponent({
 
       const pointIsFirst = pointIndex === 0;
 
-      console.log("=== lineIntersect PicksGrid.vue [124] ===", lineIntersect);
       if (lineIntersect && !pointIsFirst) return;
 
       const allPointsConsecutive = polygon.every(
