@@ -5,12 +5,10 @@ import PicksGrid from "./components/PicksGrid.vue";
 import Header from "./components/Header.vue";
 </script>
 
-<template>
-  <div id="app" class="relative flex flex-col min-h-screen bg-white">
-    <Header />
-    <PicksGrid />
-    <Footer />
-  </div>
+<template id="app" class="relative flex flex-col min-h-screen bg-white">
+  <Header />
+  <PicksGrid />
+  <Footer />
 </template>
 
 <style scoped>

@@ -3,7 +3,7 @@
   <footer
     class="mt-auto footer footer-center p-10 bg-neutral text-neutral-content"
   >
-    <p class="text-sm flex flex-row text-center text-neutral-content">
+    <h1 class="text-sm flex flex-row text-center text-neutral-content">
       Desenvolvido por
       <a
         href="https://github.com/RuanGallio"
@@ -11,10 +11,11 @@
         class="link text-purple-500 hover:underline"
         >Ruan Gallio</a
       >
-    </p>
-    <!-- make 2x1 grid -->
-    <div class="grid grid-cols-2 gap-4 place-items-center place-content-center">
-      <div class="flex flex-col gap-2 w-2/3">
+    </h1>
+    <section
+      class="grid grid-cols-2 gap-4 place-items-center place-content-center"
+    >
+      <article class="flex flex-col gap-2 w-2/3">
         <h2>
           Sobre o
           <a class="link" target="_blank" href="http://www.dma.uem.br/kit">
@@ -29,7 +30,7 @@
           didático auxiliar, textos autorais e tutoriais de uso de software
           matemático.
         </p>
-      </div>
+      </article>
       <div class="flex flex-col gap-2 w-2/3">
         <h2>Sobre o Site</h2>
         <p class="text-justify">
@@ -52,6 +53,6 @@
           da UEM.
         </p>
       </div>
-    </div>
+    </section>
   </footer>
 </template>

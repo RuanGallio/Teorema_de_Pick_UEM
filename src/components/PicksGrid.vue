@@ -300,29 +300,32 @@ export default defineComponent({
 });
 </script>
 <template>
-  <div
+  <main
     class="bg-white flex flex-col items-center justify-center w-full min-h-full"
   >
-    <div class="flex flex-col items-center justify-center w-full">
-      <div class="flex gap-2 items-center justify-center max-w-2xl">
-        <p class="text-black">
-          <b class="text-lg italic">Teorema de Pick: </b> Seja P um polígono
-          simples. Se <b class="italic">b</b> é o número de pontos de fronteira
-          e <b class="italic">i</b> o número de pontos interiores, então a área
-          de P é dada por
-          <b class="mathml-formula text-black" v-html="pickFormula"></b>.
-        </p>
-      </div>
-    </div>
+    <section class="flex flex-col items-center justify-center w-full">
+      <p class="text-black self-center justify-self-center max-w-2xl">
+        <span class="text-lg italic font-bold">Teorema de Pick: </span> Seja P
+        um polígono simples. Se <span class="italic font-bold">b</span> é o
+        número de pontos de fronteira e
+        <span class="italic font-bold">i</span> o número de pontos interiores,
+        então a área de P é dada por
+        <span
+          class="mathml-formula font-bold text-black"
+          v-html="pickFormula"
+        ></span
+        >.
+      </p>
+    </section>
 
-    <div
+    <section
       class="grid grid-cols-2 gap-4 items-center justify-between w-full max-w-7xl"
     >
       <div class="flex flex-col items-start">
         <div
           class="flex my-[2%] text-black flex-row items-center justify-center h-16 gap-3"
         >
-          <h1>Qual o tamanho do seu plano?</h1>
+          <h2>Qual o tamanho do seu plano?</h2>
           <div>
             <input
               type="number"
@@ -343,11 +346,11 @@ export default defineComponent({
           </div>
         </div>
         <div class="flex flex-row gap-6">
-          <h1
+          <h2
             class="text-black text-lg flex flex-row justify-center h-16 gap-3"
           >
             Selecionar imagem de fundo:
-          </h1>
+          </h2>
           <input type="file" class="max-w-[20%]" @change="handleFileInput" />
         </div>
         <div class="gap-6">
@@ -367,14 +370,16 @@ export default defineComponent({
         <div
           class="flex my-[2%] text-black flex-row items-center justify-center h-16 gap-3"
         >
-          <h1 class="text-black">Qual a unidade de área?</h1>
+          <h2 class="text-black">Qual a unidade de área?</h2>
           <input
             type="text"
             class="h-10 w-10 text-center text-black bg-white border-2 border-black"
             v-model="areaUnit"
           />
+          <button class="btn btn-primary self-center ml-8" @click="reloadPage">
+            Limpar
+          </button>
         </div>
-        <button class="btn btn-primary" @click="reloadPage">Limpar</button>
       </div>
       <div
         v-show="polygon.length && numPointsOnPolygon"
@@ -390,12 +395,14 @@ export default defineComponent({
         </h1>
         <h1 class="text-black">
           Área do polígono por Pick:
-          <b> {{ polygonAreaPick(numPointsInPolygon, numPointsOnPolygon) }}</b>
+          <spam class="font-bold">
+            {{ polygonAreaPick(numPointsInPolygon, numPointsOnPolygon) }}</spam
+          >
           {{ areaUnit }}
         </h1>
       </div>
-    </div>
-    <div
+    </section>
+    <section
       class="flex relative flex-row gap-10 justify-between items-center h-full overflow-scroll"
     >
       <div class="flex items-center justify-center py-4">
@@ -407,8 +414,8 @@ export default defineComponent({
           @click="handleClick"
         />
       </div>
-    </div>
-  </div>
+    </section>
+  </main>
 </template>
 <style scoped>
 input::-webkit-outer-spin-button,
